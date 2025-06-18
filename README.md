@@ -2,12 +2,12 @@
 
 ## Docker запуск
 
-1. Соберите Docker-образ из корневой папки проекта.
+1. Сборка Docker-образа из корневой папки проекта.
 ```
 docker build -t reels-fan-bot .
 ```
 
-2. Запустите контейнер.
+2. Запуск контейнер.
 ```
 docker run --env-file .env -d reels-fan-bot
 ```
