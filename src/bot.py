@@ -4,6 +4,7 @@ import re
 import os
 from dotenv import load_dotenv, dotenv_values
 
+
 load_dotenv()
 values = dotenv_values()
 bot = TeleBot(values['BOT_TOKEN'])
@@ -32,7 +33,7 @@ def download_and_send(message):
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
-                              text=f'ты кого наебать пытаешься?')
+                              text="ты кого наебать пытаешься?")
     else:
         shortcode = matched.group(1)
         try:
