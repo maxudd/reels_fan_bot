@@ -11,10 +11,11 @@ bot = TeleBot(values['BOT_TOKEN'])
 
 L = instaloader.Instaloader()
 L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
-target_directory = 'reels'
+target_dir = 'reels'
+inst_url = 'https://www.instagram.com/reel/'
 
 
-@bot.message_handler(func=lambda message: message.text.startswith('https://www.instagram.com/reel/'))
+@bot.message_handler(func=lambda message: message.text.startswith(inst_url))
 def download_and_send(message):
     chat_id = message.chat.id
     text = message.text
@@ -28,7 +29,7 @@ def download_and_send(message):
     bot_message = bot.send_message(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    text='ща будет рилс...')
-    matched = re.match(r'https://www.instagram.com/reel/(.*)/.*', text)
+    matched = re.match(fr'{inst_url}(.*)/.*', text)
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
@@ -37,19 +38,13 @@ def download_and_send(message):
         shortcode = matched.group(1)
         try:
             post = instaloader.Post.from_shortcode(L.context, shortcode)
-            L.download_post(post, target=target_directory)
-            for file in os.listdir(target_directory):
+            L.download_post(post, target=target_dir)
+            for file in os.listdir(target_dir):
                 if file.endswith('.mp4'):
-                    # bot.edit_message_media(chat_id=chat_id,
-                    #                        message_id=bot_message.message_id,
-                    #                        media=open(f'reels/{file}', 'rb'))
                     bot.send_video(chat_id=chat_id,
                                    message_thread_id=thread_id,
-                                   video=open(f'{target_directory}/{file}', 'rb'),
+                                   video=open(f'{target_dir}/{file}', 'rb'),
                                    caption=f'рилс от @{username}')
-                    # bot.edit_message_text(chat_id=chat_id,
-                    #                       message_id=bot_message.message_id,
-                    #                       text='')
                     bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(f'reels/{file}')
         except instaloader.exceptions.InstaloaderException as e:
