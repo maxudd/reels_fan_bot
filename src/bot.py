@@ -37,6 +37,7 @@ youtube_url = 'https://www.youtube.com/shorts/'
 
 @bot.message_handler(func=lambda message: message.text.startswith(inst_url))
 def download_and_send_inst(message):
+    global REELS_CNT, ERR_CNT
     chat_id = message.chat.id
     text = message.text
     message_id = message.message_id
@@ -65,23 +66,24 @@ def download_and_send_inst(message):
                                    message_thread_id=thread_id,
                                    video=open(f'{target_dir}/{file}', 'rb'),
                                    caption=f'рилс от @{username}')
-                    REELS_CNT += 1
                     bot.delete_message(chat_id, bot_message.message_id)
+                    REELS_CNT += 1
                 os.remove(f'downloads/{file}')
         except instaloader.exceptions.InstaloaderException as e:
+            ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text=f'рилса не будет :(\nошибка: {e}')
-            ERR_CNT += 1
         except:
+            ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text='ошибка при загрузке рилса, пусть админ смотрит логи')
-            ERR_CNT += 1
 
 
 @bot.message_handler(func=lambda message: message.text.startswith(youtube_url))
 def download_and_send_yt(message):
+    global SHORTS_CNT, ERR_CNT
     chat_id = message.chat.id
     text = message.text
     message_id = message.message_id
@@ -110,20 +112,20 @@ def download_and_send_yt(message):
                                    message_thread_id=thread_id,
                                    video=open(file, 'rb'),
                                    caption=f'шортс от @{username}')
-                    SHORTS_CNT += 1
                     bot.delete_message(chat_id, bot_message.message_id)
+                    SHORTS_CNT += 1
                 os.remove(file)
             os.chdir('..')  # Change back to the original directory
         except yt_dlp.utils.DownloadError as e:
+            ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text=f'шортса не будет :(\nошибка: {e}')
-            ERR_CNT += 1
         except:
+            ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
-            ERR_CNT += 1
 
 
 @bot.message_handler(commands=['status'])
