@@ -6,6 +6,12 @@ from dotenv import load_dotenv, dotenv_values
 import yt_dlp
 
 
+# Счетчики для статистики
+REELS_CNT = 0
+SHORTS_CNT = 0
+ERR_CNT = 0
+
+# Настройки для yt-dlp
 ydl_opts = {
     'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
     'outtmpl': 'video.%(ext)s', # Шаблон имени файла
@@ -56,12 +62,20 @@ def download_and_send_inst(message):
                                    message_thread_id=thread_id,
                                    video=open(f'{target_dir}/{file}', 'rb'),
                                    caption=f'рилс от @{username}')
+                    REELS_CNT += 1
                     bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(f'downloads/{file}')
         except instaloader.exceptions.InstaloaderException as e:
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text=f'рилса не будет :(\nошибка: {e}')
+            ERR_CNT += 1
+        except:
+            bot.edit_message_text(chat_id=chat_id,
+                                  message_id=bot_message.message_id,
+                                  text='ошибка при загрузке рилса, пусть админ смотрит логи')
+            ERR_CNT += 1
+            
 
 @bot.message_handler(func=lambda message: message.text.startswith(youtube_url))
 def download_and_send_yt(message):
@@ -93,6 +107,7 @@ def download_and_send_yt(message):
                                    message_thread_id=thread_id,
                                    video=open(file, 'rb'),
                                    caption=f'шортс от @{username}')
+                    SHORTS_CNT += 1
                     bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(file)
             os.chdir('..')  # Change back to the original directory
@@ -100,6 +115,25 @@ def download_and_send_yt(message):
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text=f'шортса не будет :(\nошибка: {e}')
+            ERR_CNT += 1
+        except:
+            bot.edit_message_text(chat_id=chat_id,
+                                  message_id=bot_message.message_id,
+                                  text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
+            ERR_CNT += 1
+
+
+@bot.message_handler(commands=['status'])
+def send_status(message):
+    chat_id = message.chat.id
+    thread_id = message.message_thread_id
+    bottext = f"🤖 Бот работает. За время работы:\n" \
+              f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
+              f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
+              f"❌ Количество ошибок: {ERR_CNT}"
+    bot.send_message(chat_id=chat_id,
+                        message_thread_id=thread_id,
+                        text=bottext)
 
 
 # Start polling the bot
