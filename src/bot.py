@@ -14,9 +14,9 @@ ERR_CNT = 0
 # Настройки для yt-dlp
 ydl_opts = {
     'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
-    'outtmpl': 'video.%(ext)s', # Шаблон имени файла
+    'outtmpl': 'video.%(ext)s',     # Шаблон имени файла
     'merge_output_format': 'mp4',   # Формат выходного файла
-    'noplaylist': True,  # Не загружать плейлисты
+    'noplaylist': True,             # Не загружать плейлисты
 }
 
 # Загрузка переменных окружения из .env файла
@@ -26,10 +26,13 @@ bot = TeleBot(values['BOT_TOKEN'])
 
 L = instaloader.Instaloader()
 L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
+
 target_dir = 'downloads'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+
 inst_url = 'https://www.instagram.com/reel/'
 youtube_url = 'https://www.youtube.com/shorts/'
-
 
 
 @bot.message_handler(func=lambda message: message.text.startswith(inst_url))
@@ -75,7 +78,7 @@ def download_and_send_inst(message):
                                   message_id=bot_message.message_id,
                                   text='ошибка при загрузке рилса, пусть админ смотрит логи')
             ERR_CNT += 1
-            
+
 
 @bot.message_handler(func=lambda message: message.text.startswith(youtube_url))
 def download_and_send_yt(message):
@@ -132,8 +135,8 @@ def send_status(message):
               f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
               f"❌ Количество ошибок: {ERR_CNT}"
     bot.send_message(chat_id=chat_id,
-                        message_thread_id=thread_id,
-                        text=bottext)
+                     message_thread_id=thread_id,
+                     text=bottext)
 
 
 # Start polling the bot
