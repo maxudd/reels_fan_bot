@@ -13,7 +13,7 @@ ydl_opts = {
     'noplaylist': True,  # Не загружать плейлисты
 }
 
-
+# Загрузка переменных окружения из .env файла
 load_dotenv()
 values = dotenv_values()
 bot = TeleBot(values['BOT_TOKEN'])
@@ -64,7 +64,7 @@ def download_and_send_inst(message):
                                   text=f'рилса не будет :(\nошибка: {e}')
 
 @bot.message_handler(func=lambda message: message.text.startswith(youtube_url))
-def download_and_send_inst(message):
+def download_and_send_yt(message):
     chat_id = message.chat.id
     text = message.text
     message_id = message.message_id
@@ -95,6 +95,7 @@ def download_and_send_inst(message):
                                    caption=f'шортс от @{username}')
                     bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(file)
+            os.chdir('..')  # Change back to the original directory
         except yt_dlp.utils.DownloadError as e:
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
