@@ -112,9 +112,9 @@ def download_and_send_yt(message):
                 print(f'Скачивание видео: {filename}')
                 ydl.download([text])
             bot.send_video(chat_id=chat_id,
-                            message_thread_id=thread_id,
-                            video=open(filename, 'rb'),
-                            caption=f'шортс от @{username}')
+                           message_thread_id=thread_id,
+                           video=open(filename, 'rb'),
+                           caption=f'шортс от @{username}')
             bot.delete_message(chat_id, bot_message.message_id)
             os.remove(filename)
             SHORTS_CNT += 1
