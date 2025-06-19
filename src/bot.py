@@ -14,7 +14,7 @@ ERR_CNT = 0
 # Настройки для yt-dlp
 ydl_opts = {
     'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
-    'outtmpl': 'video.%(ext)s',     # Шаблон имени файла
+    'outtmpl': '%(title)s.%(ext)s',     # Шаблон имени файла
     'merge_output_format': 'mp4',   # Формат выходного файла
     'noplaylist': True,             # Не загружать плейлисты
 }
@@ -27,9 +27,9 @@ bot = TeleBot(values['BOT_TOKEN'])
 L = instaloader.Instaloader()
 L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
 
-target_dir = 'downloads'
-if not os.path.exists(target_dir):
-    os.makedirs(target_dir)
+target_inst_dir = 'reels'
+if not os.path.exists(target_inst_dir):
+    os.makedirs(target_inst_dir)
 
 inst_url = 'https://www.instagram.com/reel/'
 youtube_full_url = 'https://www.youtube.com/shorts/'
@@ -60,16 +60,16 @@ def download_and_send_inst(message):
         shortcode = matched.group(1)
         try:
             post = instaloader.Post.from_shortcode(L.context, shortcode)
-            L.download_post(post, target=target_dir)
-            for file in os.listdir(target_dir):
+            L.download_post(post, target=target_inst_dir)
+            for file in os.listdir(target_inst_dir):
                 if file.endswith('.mp4'):
                     bot.send_video(chat_id=chat_id,
                                    message_thread_id=thread_id,
-                                   video=open(f'{target_dir}/{file}', 'rb'),
+                                   video=open(f'{target_inst_dir}/{file}', 'rb'),
                                    caption=f'рилс от @{username}')
                     bot.delete_message(chat_id, bot_message.message_id)
                     REELS_CNT += 1
-                os.remove(f'downloads/{file}')
+                os.remove(f'{target_inst_dir}/{file}')
         except instaloader.exceptions.InstaloaderException as e:
             ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
@@ -106,19 +106,18 @@ def download_and_send_yt(message):
                               text="ты кого наебать пытаешься?")
     else:
         try:
-            os.chdir(target_dir)  # Change to target directory for yt-dlp
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # Получаем информацию о видео перед скачиванием
+                filename = ydl.prepare_filename(ydl.extract_info(text, download=False))
+                print(f'Скачивание видео: {filename}')
                 ydl.download([text])
-            for file in os.listdir('.'):
-                if file.endswith('.mp4'):
-                    bot.send_video(chat_id=chat_id,
-                                   message_thread_id=thread_id,
-                                   video=open(file, 'rb'),
-                                   caption=f'шортс от @{username}')
-                    bot.delete_message(chat_id, bot_message.message_id)
-                    SHORTS_CNT += 1
-                os.remove(file)
-            os.chdir('..')  # Change back to the original directory
+            bot.send_video(chat_id=chat_id,
+                            message_thread_id=thread_id,
+                            video=open(filename, 'rb'),
+                            caption=f'шортс от @{username}')
+            bot.delete_message(chat_id, bot_message.message_id)
+            os.remove(filename)
+            SHORTS_CNT += 1
         except yt_dlp.utils.DownloadError as e:
             ERR_CNT += 1
             bot.edit_message_text(chat_id=chat_id,
