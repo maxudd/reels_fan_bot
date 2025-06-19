@@ -32,7 +32,8 @@ if not os.path.exists(target_dir):
     os.makedirs(target_dir)
 
 inst_url = 'https://www.instagram.com/reel/'
-youtube_url = 'https://www.youtube.com/shorts/'
+youtube_full_url = 'https://www.youtube.com/shorts/'
+youtube_mobile_url = 'https://youtube.com/shorts/'
 
 
 @bot.message_handler(func=lambda message: message.text.startswith(inst_url))
@@ -81,13 +82,15 @@ def download_and_send_inst(message):
                                   text='ошибка при загрузке рилса, пусть админ смотрит логи')
 
 
-@bot.message_handler(func=lambda message: message.text.startswith(youtube_url))
+@bot.message_handler(func=lambda message: message.text.startswith(youtube_full_url)
+                     or message.text.startswith(youtube_mobile_url))
 def download_and_send_yt(message):
     global SHORTS_CNT, ERR_CNT
     chat_id = message.chat.id
     text = message.text
     message_id = message.message_id
     thread_id = message.message_thread_id
+    youtube_url = youtube_full_url if youtube_full_url in text else youtube_mobile_url
     if (sender := message.forward_from):
         username = sender.username
     else:
