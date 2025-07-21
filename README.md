@@ -6,7 +6,10 @@
     ```
     bash setup.sh
     ```
-
+3. Войти в созданное окружение
+    ```
+    source bot-env/bin/activate
+    ```
 
 ## Запуск
 ```
