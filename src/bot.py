@@ -143,5 +143,16 @@ def send_status(message):
                      text=bottext)
 
 
+@bot.message_handler(commands=['start'])
+def send_status(message):
+    chat_id = message.chat.id
+    thread_id = message.message_thread_id
+    bottext = f"🤖 Привет! Основные команды бота:\n" \
+              f"🤤 /status: узнать статистику по работе бота\n"
+    bot.send_message(chat_id=chat_id,
+                     message_thread_id=thread_id,
+                     text=bottext)
+
+
 # Start polling the bot
 bot.infinity_polling(timeout=10, long_polling_timeout=5)
