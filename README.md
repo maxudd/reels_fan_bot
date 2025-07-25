@@ -10,7 +10,6 @@
     ```
     source bot-env/bin/activate
     ```
-4. Перейти в папку `src`
 
 
 ## Установка (*Windows*)
@@ -23,12 +22,16 @@
     ```
     .\bot-env\Scripts\activate
     ```
-4. Перейти в папку `src`
 
 
 ## Запуск
+Linux:
 ```
-python3 bot.py
+python3 src/bot.py
+```
+Windows:
+```
+python3 .\src\bot.py
 ```
 
 
