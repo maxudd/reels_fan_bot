@@ -51,13 +51,16 @@ def download_and_send_inst(message):
     bot_message = bot.send_message(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    text='ща будет рилс...')
-    matched = re.match(fr'{inst_url}(.*)/.*', text)
+    matched = re.match(fr'{inst_url}(.*)/\S* ?(\S*)', text)
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
                               text="ты кого наебать пытаешься?")
     else:
         shortcode = matched.group(1)
+        user_caption = f'рилс от @{username}'
+        text_caption = matched.group(2)
+        caption = text_caption + '\n' + user_caption if text_caption else user_caption
         try:
             post = instaloader.Post.from_shortcode(L.context, shortcode)
             L.download_post(post, target=target_inst_dir)
@@ -66,7 +69,7 @@ def download_and_send_inst(message):
                     bot.send_video(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    video=open(f'{target_inst_dir}/{file}', 'rb'),
-                                   caption=f'рилс от @{username}')
+                                   caption=caption)
                     bot.delete_message(chat_id, bot_message.message_id)
                     REELS_CNT += 1
                 os.remove(f'{target_inst_dir}/{file}')
@@ -99,12 +102,15 @@ def download_and_send_yt(message):
     bot_message = bot.send_message(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    text='ща будет шортс...')
-    matched = re.match(fr'{youtube_url}(.*)', text)
+    matched = re.match(fr'{youtube_url}.* ?(\S*)', text)
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
                               text="ты кого наебать пытаешься?")
     else:
+        user_caption = f'шортс от @{username}'
+        text_caption = matched.group(1)
+        caption = text_caption + '\n' + user_caption if text_caption else user_caption
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Получаем информацию о видео перед скачиванием
@@ -114,7 +120,7 @@ def download_and_send_yt(message):
             bot.send_video(chat_id=chat_id,
                            message_thread_id=thread_id,
                            video=open(filename, 'rb'),
-                           caption=f'шортс от @{username}')
+                           caption=caption)
             bot.delete_message(chat_id, bot_message.message_id)
             os.remove(filename)
             SHORTS_CNT += 1
