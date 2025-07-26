@@ -4,6 +4,7 @@ import re
 import os
 from dotenv import load_dotenv, dotenv_values
 import yt_dlp
+from params import YDL_OPTS
 
 
 # Счетчики для статистики
@@ -11,13 +12,6 @@ REELS_CNT = 0
 SHORTS_CNT = 0
 ERR_CNT = 0
 
-# Настройки для yt-dlp
-ydl_opts = {
-    'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
-    'outtmpl': '%(title)s.%(ext)s',     # Шаблон имени файла
-    'merge_output_format': 'mp4',   # Формат выходного файла
-    'noplaylist': True,             # Не загружать плейлисты
-}
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -113,7 +107,7 @@ def download_and_send_yt(message):
         text_caption = matched.group(1)
         caption = text_caption + '\n' + user_caption if text_caption else user_caption
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
                 # Получаем информацию о видео перед скачиванием
                 filename = ydl.prepare_filename(ydl.extract_info(text, download=False))
                 print(f'Скачивание видео: {filename}')
