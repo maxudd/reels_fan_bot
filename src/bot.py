@@ -20,7 +20,7 @@ bot = TeleBot(values['BOT_TOKEN'])
 
 L = instaloader.Instaloader()
 L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
-print("Instagram login successful!")
+print("Instagram login successful!\nBot starting...")
 
 target_inst_dir = 'reels'
 if not os.path.exists(target_inst_dir):
