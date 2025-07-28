@@ -46,7 +46,7 @@ def download_and_send_inst(message):
     bot_message = bot.send_message(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    text='ща будет рилс...')
-    matched = re.match(fr'{inst_url}(.*)/\S* ?(\S*)', text)
+    matched = re.match(fr'{inst_url}([^/]*)/\S* ?(.*)', text)
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
@@ -99,7 +99,7 @@ def download_and_send_yt(message):
     bot_message = bot.send_message(chat_id=chat_id,
                                    message_thread_id=thread_id,
                                    text='ща будет шортс...')
-    matched = re.match(fr'{youtube_url}.* ?(\S*)', text)
+    matched = re.match(fr'{youtube_url}\S* ?(.*)', text)
     if not matched:
         bot.edit_message_text(chat_id=chat_id,
                               message_id=bot_message.message_id,
