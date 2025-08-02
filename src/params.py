@@ -1,4 +1,4 @@
-# Настройки для yt-dlp
+# YouTube Shorts download options
 YDL_OPTS = {
     'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
     'outtmpl': '%(title)s.%(ext)s',     # Шаблон имени файла
