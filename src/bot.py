@@ -25,7 +25,7 @@ if not os.path.exists(target_inst_dir):
 
 
 if IS_REELS:
-    print("Instagram Reels feature is enabled.")
+    print("✅ Instagram Reels feature is enabled.")
     L = instaloader.Instaloader()
     L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
     print("Logged in to Instagram as:", values['INST_LOGIN'])
@@ -82,11 +82,11 @@ if IS_REELS:
                                     message_id=bot_message.message_id,
                                     text='ошибка при загрузке рилса, пусть админ смотрит логи')
 else:
-    print("Instagram Reels feature is disabled.")
+    print("❌ Instagram Reels feature is disabled.")
 
 
 if IS_SHORTS:
-    print("YouTube Shorts feature is enabled.")
+    print("✅ YouTube Shorts feature is enabled.")
 
     @bot.message_handler(func=lambda message: message.text.startswith(YT_FULL_URL)
                         or message.text.startswith(YT_MOBILE_URL))
@@ -148,7 +148,13 @@ if IS_SHORTS:
                                     message_id=bot_message.message_id,
                                     text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
 else:
-    print("YouTube Shorts feature is disabled.")
+    print("❌ YouTube Shorts feature is disabled.")
+
+
+if IS_THUMBS:
+    print("🖼️ Video thumbnails feature is enabled.")
+else:
+    print("❌ Video cover feature is disabled.")
 
 if not IS_REELS and not IS_SHORTS:
     print("А нахуя я вообще запущен...")
