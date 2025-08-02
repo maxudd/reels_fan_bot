@@ -43,13 +43,13 @@ if IS_REELS:
             username = message.from_user.username
         bot.delete_message(chat_id, message_id)
         bot_message = bot.send_message(chat_id=chat_id,
-                                    message_thread_id=thread_id,
-                                    text='ща будет рилс...')
+                                       message_thread_id=thread_id,
+                                       text='ща будет рилс...')
         matched = re.match(fr'{IG_URL}([^/]*)/\S* ?(.*)', text)
         if not matched:
             bot.edit_message_text(chat_id=chat_id,
-                                message_id=bot_message.message_id,
-                                text="ты кого наебать пытаешься?")
+                                  message_id=bot_message.message_id,
+                                  text="ты кого наебать пытаешься?")
         else:
             shortcode = matched.group(1)
             user_caption = f'рилс от @{username}'
@@ -64,23 +64,23 @@ if IS_REELS:
                         cover = open(f'{target_inst_dir}/{file}', 'rb')
                     if file.endswith('.mp4'):
                         bot.send_video(chat_id=chat_id,
-                                    message_thread_id=thread_id,
-                                    video=open(f'{target_inst_dir}/{file}', 'rb'),
-                                    caption=caption,
-                                    cover=cover)
+                                       message_thread_id=thread_id,
+                                       video=open(f'{target_inst_dir}/{file}', 'rb'),
+                                       caption=caption,
+                                       cover=cover)
                         bot.delete_message(chat_id, bot_message.message_id)
                         REELS_CNT += 1
                     os.remove(f'{target_inst_dir}/{file}')
             except instaloader.exceptions.InstaloaderException as e:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
-                                    message_id=bot_message.message_id,
-                                    text=f'рилса не будет :(\nошибка: {e}')
+                                      message_id=bot_message.message_id,
+                                      text=f'рилса не будет :(\nошибка: {e}')
             except:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
-                                    message_id=bot_message.message_id,
-                                    text='ошибка при загрузке рилса, пусть админ смотрит логи')
+                                      message_id=bot_message.message_id,
+                                      text='ошибка при загрузке рилса, пусть админ смотрит логи')
 else:
     print("❌ Instagram Reels feature is disabled.")
 
@@ -89,7 +89,7 @@ if IS_SHORTS:
     print("✅ YouTube Shorts feature is enabled.")
 
     @bot.message_handler(func=lambda message: message.text.startswith(YT_FULL_URL)
-                        or message.text.startswith(YT_MOBILE_URL))
+                         or message.text.startswith(YT_MOBILE_URL))
     def download_and_send_yt(message):
         global SHORTS_CNT, ERR_CNT
         chat_id = message.chat.id
@@ -103,13 +103,13 @@ if IS_SHORTS:
             username = message.from_user.username
         bot.delete_message(chat_id, message_id)
         bot_message = bot.send_message(chat_id=chat_id,
-                                    message_thread_id=thread_id,
-                                    text='ща будет шортс...')
+                                       message_thread_id=thread_id,
+                                       text='ща будет шортс...')
         matched = re.match(fr'{youtube_url}\S* ?(.*)', text)
         if not matched:
             bot.edit_message_text(chat_id=chat_id,
-                                message_id=bot_message.message_id,
-                                text="ты кого наебать пытаешься?")
+                                  message_id=bot_message.message_id,
+                                  text="ты кого наебать пытаешься?")
         else:
             user_caption = f'шортс от @{username}'
             text_caption = matched.group(1)
@@ -124,14 +124,15 @@ if IS_SHORTS:
                     cover = None
                     try:
                         if IS_THUMBS:
-                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg')), 'rb')
+                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                                         'thumbnail.jpg')), 'rb')
                     except:
                         print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
-                            message_thread_id=thread_id,
-                            video=open(filename, 'rb'),
-                            caption=caption,
-                            cover=cover)
+                               message_thread_id=thread_id,
+                               video=open(filename, 'rb'),
+                               caption=caption,
+                               cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(filename)
                 os.remove(cvrpth)
@@ -140,13 +141,13 @@ if IS_SHORTS:
             except yt_dlp.utils.DownloadError as e:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
-                                    message_id=bot_message.message_id,
-                                    text=f'шортса не будет :(\nошибка: {e}')
+                                      message_id=bot_message.message_id,
+                                      text=f'шортса не будет :(\nошибка: {e}')
             except:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
-                                    message_id=bot_message.message_id,
-                                    text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
+                                      message_id=bot_message.message_id,
+                                      text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
 else:
     print("❌ YouTube Shorts feature is disabled.")
 
