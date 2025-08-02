@@ -1,6 +1,7 @@
 import yt_dlp
 import requests
 
+
 def dwld_YTThumb(info, save_path):
     try:
         # Получаем информацию о видео
@@ -13,13 +14,8 @@ def dwld_YTThumb(info, save_path):
             with open(save_path, 'wb') as file:
                 file.write(response.content)
             print("Thumbnail saved successfully.")
+            return save_path
         else:
             print("Failed to retrieve thumbnail.")
     except Exception as e:
         print(f"An error occurred: {e}")
-    return save_path
-
-# Пример использования
-# video_url = "https://www.youtube.com/shorts/RZmM_S6epNY"
-# save_path = 'thumbnail.jpg'
-# download_youtube_shorts_thumbnail(video_url, save_path)
