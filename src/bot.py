@@ -4,7 +4,7 @@ import re
 import os
 from dotenv import load_dotenv, dotenv_values
 import yt_dlp
-import params as prm
+from params import *
 import utils
 
 
@@ -27,9 +27,6 @@ target_inst_dir = 'reels'
 if not os.path.exists(target_inst_dir):
     os.makedirs(target_inst_dir)
 
-inst_url = 'https://www.instagram.com/reel/'
-youtube_full_url = 'https://www.youtube.com/shorts/'
-youtube_mobile_url = 'https://youtube.com/shorts/'
 
 
 @bot.message_handler(func=lambda message: message.text.startswith(inst_url))
