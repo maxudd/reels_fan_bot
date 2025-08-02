@@ -61,7 +61,9 @@ def download_and_send_inst(message):
             post = instaloader.Post.from_shortcode(L.context, shortcode)
             L.download_post(post, target=target_inst_dir)
             for file in os.listdir(target_inst_dir):
-                cover = open(f'{target_inst_dir}/{file}', 'rb') if prm.IS_THUMBS and file.endswith('.jpg') else None
+                cover = None
+                if prm.IS_THUMBS and file.endswith('.jpg'):
+                    cover = open(f'{target_inst_dir}/{file}', 'rb')
                 if file.endswith('.mp4'):
                     bot.send_video(chat_id=chat_id,
                                    message_thread_id=thread_id,

@@ -9,7 +9,7 @@ def dwld_YTThumb(info, save_path):
 
         # Загружаем картинку
         response = requests.get(thumbnail_url)
-        
+
         if response.status_code == 200:
             with open(save_path, 'wb') as file:
                 file.write(response.content)
