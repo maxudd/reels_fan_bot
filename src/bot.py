@@ -118,8 +118,8 @@ def download_and_send_yt(message):
                 ydl.download([text])
                 cover = None
                 try:
-                    if not prm.IS_THUMBS:
-                        cover = open(utils.dwld_YTThumb(info, os.path.join((os.getcwd(), 'thumbnail.jpg'))), 'rb')
+                    if prm.IS_THUMBS:
+                        cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg')), 'rb')
                 except:
                     print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
             bot.send_video(chat_id=chat_id,
@@ -129,6 +129,8 @@ def download_and_send_yt(message):
                            cover=cover)
             bot.delete_message(chat_id, bot_message.message_id)
             os.remove(filename)
+            os.remove(cvrpth)
+            print(f"Shorts {filename} sent successfully.")
             SHORTS_CNT += 1
         except yt_dlp.utils.DownloadError as e:
             ERR_CNT += 1
