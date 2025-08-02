@@ -38,6 +38,7 @@ def dwld_YTThumb(info, save_path):
             print("Thumbnail downloaded successfully.")
             crop_to_vertical(response.content, save_path)
             return save_path
+        else:
             print("Failed to retrieve thumbnail.")
     except Exception as e:
         print(f"An error occurred: {e}")
