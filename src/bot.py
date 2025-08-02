@@ -4,7 +4,7 @@ import re
 import os
 from dotenv import load_dotenv, dotenv_values
 import yt_dlp
-from params import YDL_OPTS
+import params as prm
 
 
 # Счетчики для статистики
@@ -60,7 +60,7 @@ def download_and_send_inst(message):
             post = instaloader.Post.from_shortcode(L.context, shortcode)
             L.download_post(post, target=target_inst_dir)
             for file in os.listdir(target_inst_dir):
-                cover = open(f'{target_inst_dir}/{file}', 'rb') if file.endswith('.jpg') else None
+                cover = open(f'{target_inst_dir}/{file}', 'rb') if prm.IS_THUMBS and file.endswith('.jpg') else None
                 if file.endswith('.mp4'):
                     bot.send_video(chat_id=chat_id,
                                    message_thread_id=thread_id,
@@ -109,7 +109,7 @@ def download_and_send_yt(message):
         text_caption = matched.group(1)
         caption = text_caption + '\n' + user_caption if text_caption else user_caption
         try:
-            with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+            with yt_dlp.YoutubeDL(prm.YDL_OPTS) as ydl:
                 # Получаем информацию о видео перед скачиванием
                 filename = ydl.prepare_filename(ydl.extract_info(text, download=False))
                 print(f'Скачивание видео: {filename}')

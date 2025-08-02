@@ -5,3 +5,6 @@ YDL_OPTS = {
     'merge_output_format': 'mp4',   # Формат выходного файла
     'noplaylist': True,             # Не загружать плейлисты
 }
+
+# Video thumbnails option
+IS_THUMBS = True
