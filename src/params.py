@@ -1,3 +1,11 @@
+""" This file contains parameters and configurations for the bot """
+# URLs for Instagram Reels and YouTube Shorts
+IG_URL = 'https://www.instagram.com/reel/'
+YT_FULL_URL = 'https://www.youtube.com/shorts/'
+YT_MOBILE_URL = 'https://youtube.com/shorts/'
+
+
+""" User-updatable parameters part """
 # YouTube Shorts download options
 YDL_OPTS = {
     'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
