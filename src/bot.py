@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import yt_dlp
 import params as prm
+import utils
 
 
 # Счетчики для статистики
@@ -111,13 +112,21 @@ def download_and_send_yt(message):
         try:
             with yt_dlp.YoutubeDL(prm.YDL_OPTS) as ydl:
                 # Получаем информацию о видео перед скачиванием
-                filename = ydl.prepare_filename(ydl.extract_info(text, download=False))
+                info = ydl.extract_info(text, download=False)
+                filename = ydl.prepare_filename(info)
                 print(f'Скачивание видео: {filename}')
                 ydl.download([text])
+                cover = None
+                try:
+                    if not prm.IS_THUMBS:
+                        cover = open(utils.dwld_YTThumb(info, os.path.join((os.getcwd(), 'thumbnail.jpg'))), 'rb')
+                except:
+                    print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
             bot.send_video(chat_id=chat_id,
                            message_thread_id=thread_id,
                            video=open(filename, 'rb'),
-                           caption=caption)
+                           caption=caption,
+                           cover=cover)
             bot.delete_message(chat_id, bot_message.message_id)
             os.remove(filename)
             SHORTS_CNT += 1
