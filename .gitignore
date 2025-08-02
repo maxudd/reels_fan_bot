@@ -4,4 +4,4 @@ __pycache__/
 tmp/
 *.pyc
 downloads/
-thumbnails*
+thumbnail*
