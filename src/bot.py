@@ -121,7 +121,6 @@ if IS_SHORTS:
                     filename = ydl.prepare_filename(info)
                     print(f'Скачивание видео: {filename}')
                     ydl.download([text])
-                    cover = None
                     try:
                         if IS_THUMBS:
                             cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
