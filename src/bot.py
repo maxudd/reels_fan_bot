@@ -21,7 +21,7 @@ bot = TeleBot(values['BOT_TOKEN'])
 
 L = instaloader.Instaloader()
 L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
-print("Instagram login successful!\nBot starting...")
+print("Logged in to Instagram as:", values['INST_LOGIN'])
 
 target_inst_dir = 'reels'
 if not os.path.exists(target_inst_dir):
@@ -171,4 +171,5 @@ def send_start(message):
 
 
 # Start polling the bot
+print("Bot starting...")
 bot.infinity_polling(timeout=10, long_polling_timeout=5)
