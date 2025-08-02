@@ -4,6 +4,7 @@ YDL_OPTS = {
     'outtmpl': '%(title)s.%(ext)s',     # Шаблон имени файла
     'merge_output_format': 'mp4',   # Формат выходного файла
     'noplaylist': True,             # Не загружать плейлисты
+    'quiet': True   # HZ что это но выглядит хайпово
 }
 
 # Video thumbnails option
