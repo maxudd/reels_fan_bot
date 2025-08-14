@@ -1,11 +1,12 @@
-from telebot import TeleBot
-import instaloader
+import threading
 import re
 import os
 from dotenv import load_dotenv, dotenv_values
+from telebot import TeleBot
+import instaloader
 import yt_dlp
 from params import *
-import utils
+from utils import *
 
 
 # Счетчики для статистики
@@ -116,18 +117,13 @@ if IS_SHORTS:
             text_caption = matched.group(1)
             caption = text_caption + '\n' + user_caption if text_caption else user_caption
             try:
-                with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-                    # Получаем информацию о видео перед скачиванием
-                    info = ydl.extract_info(text, download=False)
-                    filename = ydl.prepare_filename(info)
-                    print(f'Скачивание видео: {filename}')
-                    ydl.download([text])
-                    try:
-                        if IS_THUMBS:
-                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
-                                                                                         'thumbnail.jpg')), 'rb')
-                    except:
-                        print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
+                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
+                try:
+                    if IS_THUMBS:
+                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                               'thumbnail.jpg')), 'rb')
+                except:
+                    print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
                                message_thread_id=thread_id,
                                video=open(filename, 'rb'),
@@ -182,17 +178,12 @@ if IS_VKCLIPS:
             text_caption = matched.group(1)
             caption = text_caption + '\n' + user_caption if text_caption else user_caption
             try:
-                with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-                    # Получаем информацию о видео перед скачиванием
-                    info = ydl.extract_info(text, download=False)
-                    filename = ydl.prepare_filename(info)
-                    print(f'Скачивание видео: {filename}')
-                    ydl.download([text])
-                    try:
-                        if IS_THUMBS:
-                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
-                                                                                         'thumbnail.jpg')), 'rb')
-                    except:
+                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
+                try:
+                    if IS_THUMBS:
+                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                               'thumbnail.jpg')), 'rb')
+                except:
                         print("ERROR OCCURED WHILE TAKING VK CLIPS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
                                message_thread_id=thread_id,
