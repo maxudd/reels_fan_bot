@@ -3,6 +3,8 @@
 IG_URL = 'https://www.instagram.com/reel/'
 YT_FULL_URL = 'https://www.youtube.com/shorts/'
 YT_MOBILE_URL = 'https://youtube.com/shorts/'
+VK_CLIPS_URL = 'https://vk.com/clip-'
+VK_VIDEO_CLIPS_URL = 'https://vkvideo.ru/clip-'
 
 
 """ User-updatable parameters part """
@@ -19,3 +21,4 @@ YDL_OPTS = {
 IS_THUMBS = True
 IS_SHORTS = True
 IS_REELS = True
+IS_VKCLIPS = True
