@@ -203,7 +203,7 @@ if IS_VKCLIPS:
                 os.remove(filename)
                 # os.remove(cvrpth)
                 print(f"VKClip {filename} sent successfully.")
-                VK_CLIPS_URL += 1
+                VKCLIPS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
