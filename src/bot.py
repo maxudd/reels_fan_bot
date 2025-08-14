@@ -188,17 +188,17 @@ if IS_VKCLIPS:
                     filename = ydl.prepare_filename(info)
                     print(f'Скачивание видео: {filename}')
                     ydl.download([text])
-                    # try:
-                    #     if IS_THUMBS:
-                    #         cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
-                    #                                                                      'thumbnail.jpg')), 'rb')
-                    # except:
-                    #     print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
+                    try:
+                        if IS_THUMBS:
+                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                                         'thumbnail.jpg')), 'rb')
+                    except:
+                        print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
                                message_thread_id=thread_id,
                                video=open(filename, 'rb'),
-                               caption=caption,)
-                            #    cover=cover)
+                               caption=caption,
+                               cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(filename)
                 # os.remove(cvrpth)
