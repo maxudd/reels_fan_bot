@@ -31,7 +31,7 @@ python3 src/bot.py
 ```
 Windows:
 ```
-python3 .\src\bot.py
+python .\src\bot.py
 ```
 
 
