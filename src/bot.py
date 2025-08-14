@@ -171,14 +171,14 @@ if IS_VKCLIPS:
         bot.delete_message(chat_id, message_id)
         bot_message = bot.send_message(chat_id=chat_id,
                                        message_thread_id=thread_id,
-                                       text='ща будет КЛИП...')
+                                       text='ща будет ВК КЛИП...')
         matched = re.match(fr'{vk_url}\S* ?(.*)', text)
         if not matched:
             bot.edit_message_text(chat_id=chat_id,
                                   message_id=bot_message.message_id,
                                   text="ты кого наебать пытаешься?")
         else:
-            user_caption = f'КЛИП от @{username}'
+            user_caption = f'ВК КЛИП от @{username}'
             text_caption = matched.group(1)
             caption = text_caption + '\n' + user_caption if text_caption else user_caption
             try:
@@ -193,7 +193,7 @@ if IS_VKCLIPS:
                             cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
                                                                                          'thumbnail.jpg')), 'rb')
                     except:
-                        print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
+                        print("ERROR OCCURED WHILE TAKING VK CLIPS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
                                message_thread_id=thread_id,
                                video=open(filename, 'rb'),
@@ -201,19 +201,19 @@ if IS_VKCLIPS:
                                cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
                 os.remove(filename)
-                # os.remove(cvrpth)
-                print(f"VKClip {filename} sent successfully.")
+                os.remove(cvrpth)
+                print(f"VK Clip {filename} sent successfully.")
                 VKCLIPS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
                                       message_id=bot_message.message_id,
-                                      text=f'ВККЛИПА не будет :(\nошибка: {e}')
+                                      text=f'ВК КЛИПА не будет :(\nошибка: {e}')
             except:
                 ERR_CNT += 1
                 bot.edit_message_text(chat_id=chat_id,
                                       message_id=bot_message.message_id,
-                                      text='ошибка при загрузке ВККЛИПА. бот занят или пусть админ смотрит логи')
+                                      text='ошибка при загрузке ВК КЛИПА. бот занят или пусть админ смотрит логи')
 else:
     print("❌   VK Clips feature is disabled.")
 
@@ -234,7 +234,7 @@ def send_status(message):
     bottext = f"🤖 Бот работает. За время работы:\n" \
               f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
               f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
-              f"🤯 Количество скачанных ВККЛИПОВ: {VKCLIPS_CNT}\n" \
+              f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
               f"❌ Количество ошибок: {ERR_CNT}"
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
