@@ -26,6 +26,20 @@ def crop_to_vertical(image_bytes, save_path, aspect_ratio=(9, 16)):
     return save_path
 
 
+def dwld_YTDLP_video(url: str, ydl_opts: dict) -> tuple[str, dict] | None:
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Получаем информацию о видео перед скачиванием
+            info = ydl.extract_info(url, download=False)
+            filename = ydl.prepare_filename(info)
+            print(f'Скачивание видео: {filename}')
+            ydl.download([url])
+            return filename, info
+    except Exception as e:
+        print(f"An error occurred while downloading video via YT_DLP: {e}")
+        return None
+
+
 def dwld_YTThumb(info, save_path):
     try:
         # Получаем информацию о видео

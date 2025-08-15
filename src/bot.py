@@ -1,16 +1,18 @@
-from telebot import TeleBot
-import instaloader
+import threading
 import re
 import os
 from dotenv import load_dotenv, dotenv_values
+from telebot import TeleBot
+import instaloader
 import yt_dlp
 from params import *
-import utils
+from utils import *
 
 
 # Счетчики для статистики
 REELS_CNT = 0
 SHORTS_CNT = 0
+VKCLIPS_CNT = 0
 ERR_CNT = 0
 
 
@@ -115,18 +117,13 @@ if IS_SHORTS:
             text_caption = matched.group(1)
             caption = text_caption + '\n' + user_caption if text_caption else user_caption
             try:
-                with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-                    # Получаем информацию о видео перед скачиванием
-                    info = ydl.extract_info(text, download=False)
-                    filename = ydl.prepare_filename(info)
-                    print(f'Скачивание видео: {filename}')
-                    ydl.download([text])
-                    try:
-                        if IS_THUMBS:
-                            cover = open(cvrpth := utils.dwld_YTThumb(info, os.path.join(os.getcwd(),
-                                                                                         'thumbnail.jpg')), 'rb')
-                    except:
-                        print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
+                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
+                try:
+                    if IS_THUMBS:
+                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                               'thumbnail.jpg')), 'rb')
+                except:
+                    print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
                 bot.send_video(chat_id=chat_id,
                                message_thread_id=thread_id,
                                video=open(filename, 'rb'),
@@ -151,12 +148,73 @@ else:
     print("❌   YouTube Shorts feature is disabled.")
 
 
+if IS_VKCLIPS:
+    print("✅   VK CLips feature is enabled.")
+
+    @bot.message_handler(func=lambda message: message.text.startswith(VK_CLIPS_URL)
+                         or message.text.startswith(VK_VIDEO_CLIPS_URL))
+    def download_and_send_vk(message):
+        global VKCLIPS_CNT, ERR_CNT
+        chat_id = message.chat.id
+        text = message.text
+        message_id = message.message_id
+        thread_id = message.message_thread_id
+        vk_url = VK_CLIPS_URL if VK_CLIPS_URL in text else VK_VIDEO_CLIPS_URL
+        if (sender := message.forward_from):
+            username = sender.username
+        else:
+            username = message.from_user.username
+        bot.delete_message(chat_id, message_id)
+        bot_message = bot.send_message(chat_id=chat_id,
+                                       message_thread_id=thread_id,
+                                       text='ща будет ВК КЛИП...')
+        matched = re.match(fr'{vk_url}\S* ?(.*)', text)
+        if not matched:
+            bot.edit_message_text(chat_id=chat_id,
+                                  message_id=bot_message.message_id,
+                                  text="ты кого наебать пытаешься?")
+        else:
+            user_caption = f'ВК КЛИП от @{username}'
+            text_caption = matched.group(1)
+            caption = text_caption + '\n' + user_caption if text_caption else user_caption
+            try:
+                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
+                try:
+                    if IS_THUMBS:
+                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
+                                                                               'thumbnail.jpg')), 'rb')
+                except:
+                        print("ERROR OCCURED WHILE TAKING VK CLIPS THUMBNAIL")
+                bot.send_video(chat_id=chat_id,
+                               message_thread_id=thread_id,
+                               video=open(filename, 'rb'),
+                               caption=caption,
+                               cover=cover)
+                bot.delete_message(chat_id, bot_message.message_id)
+                os.remove(filename)
+                os.remove(cvrpth)
+                print(f"VK Clip {filename} sent successfully.")
+                VKCLIPS_CNT += 1
+            except yt_dlp.utils.DownloadError as e:
+                ERR_CNT += 1
+                bot.edit_message_text(chat_id=chat_id,
+                                      message_id=bot_message.message_id,
+                                      text=f'ВК КЛИПА не будет :(\nошибка: {e}')
+            except:
+                ERR_CNT += 1
+                bot.edit_message_text(chat_id=chat_id,
+                                      message_id=bot_message.message_id,
+                                      text='ошибка при загрузке ВК КЛИПА. бот занят или пусть админ смотрит логи')
+else:
+    print("❌   VK Clips feature is disabled.")
+
+
 if IS_THUMBS:
     print("🖼️   Video thumbnails feature is enabled.")
 else:
     print("❌   Video cover feature is disabled.")
 
-if not IS_REELS and not IS_SHORTS:
+if not IS_REELS and not IS_SHORTS and not IS_VKCLIPS:
     print("А нахуя я вообще запущен...")
 
 
@@ -167,6 +225,7 @@ def send_status(message):
     bottext = f"🤖 Бот работает. За время работы:\n" \
               f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
               f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
+              f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
               f"❌ Количество ошибок: {ERR_CNT}"
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
