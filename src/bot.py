@@ -244,5 +244,11 @@ def send_start(message: dict) -> None:
 
 
 # Start polling the bot
-print("Bot starting...")
-bot.infinity_polling(timeout=10, long_polling_timeout=5)
+print("Bot starting")
+try:
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+except apihelper.ApiException as e:
+    print(f"API Exception occurred: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+print("Bot stopped.")
