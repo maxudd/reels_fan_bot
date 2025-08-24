@@ -2,7 +2,7 @@ import threading
 import re
 import os
 from dotenv import load_dotenv, dotenv_values
-from telebot import TeleBot
+from telebot import TeleBot, apihelper
 import instaloader
 import yt_dlp
 from params import *
@@ -249,6 +249,7 @@ try:
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
 except apihelper.ApiException as e:
     print(f"API Exception occurred: {e}")
+    # print("Bot is already running on another device. Exiting.")
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 print("Bot stopped.")
