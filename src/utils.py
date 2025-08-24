@@ -4,7 +4,7 @@ from PIL import Image
 from io import BytesIO
 
 
-def crop_to_vertical(image_bytes, save_path, aspect_ratio=(9, 16)):
+def crop_to_vertical(image_bytes: bytes, save_path: str, aspect_ratio: tuple[int, int]=(9, 16)) -> str:
     image = Image.open(BytesIO(image_bytes))
     width, height = image.size
     target_ratio = aspect_ratio[0] / aspect_ratio[1]
@@ -40,7 +40,7 @@ def dwld_YTDLP_video(url: str, ydl_opts: dict) -> tuple[str, dict] | None:
         return None
 
 
-def dwld_YTThumb(info, save_path):
+def dwld_YTThumb(info: dict, save_path: str) -> None:
     try:
         # Получаем информацию о видео
         thumbnail_url = info.get('thumbnail', [])

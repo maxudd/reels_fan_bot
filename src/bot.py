@@ -33,7 +33,7 @@ if IS_REELS:
     print("Logged in to Instagram as:", values['INST_LOGIN'])
 
     @bot.message_handler(func=lambda message: message.text.startswith(IG_URL))
-    def download_and_send_inst(message):
+    def download_and_send_inst(message: dict) -> None:
         global REELS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -92,7 +92,7 @@ if IS_SHORTS:
 
     @bot.message_handler(func=lambda message: message.text.startswith(YT_FULL_URL)
                          or message.text.startswith(YT_MOBILE_URL))
-    def download_and_send_yt(message):
+    def download_and_send_yt(message: dict) -> None:
         global SHORTS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -153,7 +153,7 @@ if IS_VKCLIPS:
 
     @bot.message_handler(func=lambda message: message.text.startswith(VK_CLIPS_URL)
                          or message.text.startswith(VK_VIDEO_CLIPS_URL))
-    def download_and_send_vk(message):
+    def download_and_send_vk(message: dict) -> None:
         global VKCLIPS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -219,7 +219,7 @@ if not IS_REELS and not IS_SHORTS and not IS_VKCLIPS:
 
 
 @bot.message_handler(commands=['status'])
-def send_status(message):
+def send_status(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = f"🤖 Бот работает. За время работы:\n" \
@@ -233,7 +233,7 @@ def send_status(message):
 
 
 @bot.message_handler(commands=['start'])
-def send_start(message):
+def send_start(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = "🤖 Привет! Основные команды бота:\n" \
