@@ -130,8 +130,8 @@ if IS_SHORTS:
                                caption=caption,
                                cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename)
-                os.remove(cvrpth)
+                os.remove(filename) if os.path.exists(filename) else None
+                os.remove(cvrpth) if os.path.exists(cvrpth) else None
                 print(f"Shorts {filename} sent successfully.")
                 SHORTS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
@@ -191,8 +191,8 @@ if IS_VKCLIPS:
                                caption=caption,
                                cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename)
-                os.remove(cvrpth)
+                os.remove(filename) if os.path.exists(filename) else None
+                os.remove(cvrpth) if os.path.exists(cvrpth) else None
                 print(f"VK Clip {filename} sent successfully.")
                 VKCLIPS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
