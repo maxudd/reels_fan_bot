@@ -2,7 +2,7 @@ import threading
 import re
 import os
 from dotenv import load_dotenv, dotenv_values
-from telebot import TeleBot
+from telebot import TeleBot, apihelper
 import instaloader
 import yt_dlp
 from params import *
@@ -33,7 +33,7 @@ if IS_REELS:
     print("Logged in to Instagram as:", values['INST_LOGIN'])
 
     @bot.message_handler(func=lambda message: message.text.startswith(IG_URL))
-    def download_and_send_inst(message):
+    def download_and_send_inst(message: dict) -> None:
         global REELS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -92,7 +92,7 @@ if IS_SHORTS:
 
     @bot.message_handler(func=lambda message: message.text.startswith(YT_FULL_URL)
                          or message.text.startswith(YT_MOBILE_URL))
-    def download_and_send_yt(message):
+    def download_and_send_yt(message: dict) -> None:
         global SHORTS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -130,8 +130,8 @@ if IS_SHORTS:
                                caption=caption,
                                cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename)
-                os.remove(cvrpth)
+                os.remove(filename) if os.path.exists(filename) else None
+                os.remove(cvrpth) if os.path.exists(cvrpth) else None
                 print(f"Shorts {filename} sent successfully.")
                 SHORTS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
@@ -153,7 +153,7 @@ if IS_VKCLIPS:
 
     @bot.message_handler(func=lambda message: message.text.startswith(VK_CLIPS_URL)
                          or message.text.startswith(VK_VIDEO_CLIPS_URL))
-    def download_and_send_vk(message):
+    def download_and_send_vk(message: dict) -> None:
         global VKCLIPS_CNT, ERR_CNT
         chat_id = message.chat.id
         text = message.text
@@ -191,8 +191,8 @@ if IS_VKCLIPS:
                                caption=caption,
                                cover=cover)
                 bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename)
-                os.remove(cvrpth)
+                os.remove(filename) if os.path.exists(filename) else None
+                os.remove(cvrpth) if os.path.exists(cvrpth) else None
                 print(f"VK Clip {filename} sent successfully.")
                 VKCLIPS_CNT += 1
             except yt_dlp.utils.DownloadError as e:
@@ -219,7 +219,7 @@ if not IS_REELS and not IS_SHORTS and not IS_VKCLIPS:
 
 
 @bot.message_handler(commands=['status'])
-def send_status(message):
+def send_status(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = f"🤖 Бот работает. За время работы:\n" \
@@ -233,7 +233,7 @@ def send_status(message):
 
 
 @bot.message_handler(commands=['start'])
-def send_start(message):
+def send_start(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = "🤖 Привет! Основные команды бота:\n" \
@@ -244,5 +244,12 @@ def send_start(message):
 
 
 # Start polling the bot
-print("Bot starting...")
-bot.infinity_polling(timeout=10, long_polling_timeout=5)
+print("Bot starting")
+try:
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+except apihelper.ApiException as e:
+    print(f"API Exception occurred: {e}")
+    # print("Bot is already running on another device. Exiting.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+print("Bot stopped.")
