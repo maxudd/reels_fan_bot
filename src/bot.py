@@ -6,6 +6,7 @@ from telebot import TeleBot, apihelper
 import yt_dlp
 from params import *
 from utils import *
+import sqlite3
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -42,6 +43,15 @@ class VideoHandler:
                                    text=error_text)
 
     def download_and_send_video(self):
+        match self.type:
+            case 'рилс':
+                field = 'reels_cnt'
+            case 'шортс':
+                field = 'shorts_cnt'
+            case 'вк клип':
+                field = 'vk_cnt'
+        conn = sqlite3.connect('bot.db')
+        cursor = conn.cursor()
         try:
             video_path, info = dwld_YTDLP_video(self.text, YDL_OPTS)
             try:
@@ -59,15 +69,32 @@ class VideoHandler:
             os.remove(video_path) if os.path.exists(video_path) else None
             os.remove(cover_path) if os.path.exists(cover_path) else None
             print(f"Video \"{video_path}\" has sent successfully.")
+            cursor.execute("""
+                UPDATE stats
+                SET {} = {} + 1
+                WHERE chat_id = ?;
+            """.format(field, field), (self.chat_id, ))
         except yt_dlp.utils.DownloadError as e:
             self.handle_error(f'{self.type}а не будет :(\nошибка: {e}')
+            cursor.execute("""
+                UPDATE stats
+                SET err_cnt = err_cnt + 1
+                WHERE chat_id = ?;
+            """, (self.chat_id, ))
         except:
             self.handle_error('ошибка при загрузке. бот занят или пусть админ смотрит логи')
-        
+            cursor.execute("""
+                UPDATE stats
+                SET err_cnt = err_cnt + 1
+                WHERE chat_id = ?;
+            """, (self.chat_id, ))
+        conn.commit()
+        conn.close()
+
     def process(self, matched):
         self.preprocess(f'ща будет {self.type}')
         self.extract_caption(matched)
-        self.download_video()
+        self.download_and_send_video()
 
 @bot.message_handler(func=lambda message: message.text.startswith('https://'))
 def handle_urls(message: dict) -> None:
@@ -89,12 +116,18 @@ def handle_urls(message: dict) -> None:
 def send_status(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
-    bottext = '...'
-    # bottext = f"🤖 Бот работает. За время работы:\n" \
-    #           f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
-    #           f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
-    #           f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
-    #           f"❌ Количество ошибок: {ERR_CNT}"
+    with sqlite3.connect('bot.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT reels_cnt, shorts_cnt, vk_cnt, err_cnt FROM stats
+            WHERE chat_id=?;
+        """, (chat_id,))
+        REELS_CNT, SHORTS_CNT, VKCLIPS_CNT, ERR_CNT = cursor.fetchone()
+    bottext = f"🤖 Бот работает. За время работы:\n" \
+              f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
+              f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
+              f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
+              f"❌ Количество ошибок: {ERR_CNT}"
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
@@ -109,6 +142,21 @@ def send_start(message: dict) -> None:
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
+    with sqlite3.connect('bot.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stats(
+                chat_id INT PRIMARY KEY,
+                reels_cnt INT DEFAULT 0,
+                shorts_cnt INT DEFAULT 0,
+                vk_cnt INT DEFAULT 0,
+                err_cnt INT DEFAULT 0
+            );
+        """)
+        cursor.execute("""
+            INSERT INTO stats(chat_id)
+            VALUES (?)    
+        """, (chat_id,))
 
 # Start polling the bot
 print("Bot starting")
