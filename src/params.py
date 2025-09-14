@@ -1,11 +1,8 @@
 """ This file contains parameters and configurations for the bot """
 # URLs for Instagram Reels, YouTube Shorts and VK Clips
-IG_URL = 'https://www.instagram.com/reel/'
-YT_FULL_URL = 'https://www.youtube.com/shorts/'
-YT_MOBILE_URL = 'https://youtube.com/shorts/'
-VK_CLIPS_URL = 'https://vk.com/clip-'
-VK_VIDEO_CLIPS_URL = 'https://vkvideo.ru/clip-'
-
+IG_URLS = ['https://www.instagram.com/reel/']
+YT_URLS = ['https://youtube.com/shorts/']
+VK_URLS = ['https://vk.com/clip-', 'https://vkvideo.ru/clip-']
 
 """ User-updatable parameters part """
 # YouTube Shorts & VK Clips download options

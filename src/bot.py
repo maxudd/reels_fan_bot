@@ -3,18 +3,9 @@ import re
 import os
 from dotenv import load_dotenv, dotenv_values
 from telebot import TeleBot, apihelper
-import instaloader
 import yt_dlp
 from params import *
 from utils import *
-
-
-# Счетчики для статистики
-REELS_CNT = 0
-SHORTS_CNT = 0
-VKCLIPS_CNT = 0
-ERR_CNT = 0
-
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -22,211 +13,88 @@ values = dotenv_values()
 bot = TeleBot(values['BOT_TOKEN'])
 
 target_inst_dir = 'reels'
-if not os.path.exists(target_inst_dir):
-    os.makedirs(target_inst_dir)
+os.makedirs(target_inst_dir, exist_ok=True)
 
+class VideoHandler:
+    def __init__(self, bot, message, type):
+        self.bot = bot
+        self.message = message
+        self.chat_id = message.chat.id
+        self.thread_id = message.message_thread_id
+        self.text = message.text
+        self.username = message.forward_from.username if message.forward_from else message.from_user.username
+        self.type = type
 
-if IS_REELS:
-    print("✅   Instagram Reels feature is enabled.")
-    L = instaloader.Instaloader()
-    L.login(values['INST_LOGIN'], values['INST_PASSWORD'])
-    print("Logged in to Instagram as:", values['INST_LOGIN'])
+    def preprocess(self, wait_text):
+        self.bot.delete_message(self.chat_id, self.message.message_id)
+        self.feedback_msg = self.bot.send_message(chat_id=self.chat_id,
+                                                  message_thread_id=self.thread_id,
+                                                  text=wait_text)
 
-    @bot.message_handler(func=lambda message: message.text.startswith(IG_URL))
-    def download_and_send_inst(message: dict) -> None:
-        global REELS_CNT, ERR_CNT
-        chat_id = message.chat.id
-        text = message.text
-        message_id = message.message_id
-        thread_id = message.message_thread_id
-        if (sender := message.forward_from):
-            username = sender.username
-        else:
-            username = message.from_user.username
-        bot.delete_message(chat_id, message_id)
-        bot_message = bot.send_message(chat_id=chat_id,
-                                       message_thread_id=thread_id,
-                                       text='ща будет рилс...')
-        matched = re.match(fr'{IG_URL}([^/]*)/\S* ?(.*)', text)
-        if not matched:
-            bot.edit_message_text(chat_id=chat_id,
-                                  message_id=bot_message.message_id,
-                                  text="ты кого наебать пытаешься?")
-        else:
-            shortcode = matched.group(1)
-            user_caption = f'рилс от @{username}'
-            text_caption = matched.group(2)
-            caption = text_caption + '\n' + user_caption if text_caption else user_caption
+    def extract_caption(self, matched):
+        user_caption = f'{self.type} от @{self.username}'
+        text_caption = matched.groups()[-1]
+        self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
+
+    def handle_error(self, error_text):
+        self.bot.edit_message_text(chat_id=self.chat_id,
+                                   message_id=self.feedback_msg.message_id,
+                                   text=error_text)
+
+    def download_and_send_video(self):
+        try:
+            video_path, info = dwld_YTDLP_video(self.text, YDL_OPTS)
             try:
-                post = instaloader.Post.from_shortcode(L.context, shortcode)
-                L.download_post(post, target=target_inst_dir)
-                cover = None
-                for file in os.listdir(target_inst_dir):
-                    if IS_THUMBS and file.endswith('.jpg'):
-                        cover = open(f'{target_inst_dir}/{file}', 'rb')
-                    if file.endswith('.mp4'):
-                        bot.send_video(chat_id=chat_id,
-                                       message_thread_id=thread_id,
-                                       video=open(f'{target_inst_dir}/{file}', 'rb'),
-                                       caption=caption,
-                                       cover=cover)
-                        bot.delete_message(chat_id, bot_message.message_id)
-                        REELS_CNT += 1
-                    os.remove(f'{target_inst_dir}/{file}')
-            except instaloader.exceptions.InstaloaderException as e:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text=f'рилса не будет :(\nошибка: {e}')
+                if IS_THUMBS:
+                    cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
             except:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text='ошибка при загрузке рилса, пусть админ смотрит логи')
-else:
-    print("❌   Instagram Reels feature is disabled.")
+                print("ERROR OCCURED WHILE TAKING THUMBNAIL")
+            self.bot.send_video(chat_id=self.chat_id,
+                                message_thread_id=self.thread_id,
+                                video=open(video_path, 'rb'),
+                                caption=self.caption,
+                                thumb=open(cover_path, 'rb'))
+            self.bot.delete_message(chat_id=self.chat_id,
+                                    message_id=self.feedback_msg.message_id)
+            os.remove(video_path) if os.path.exists(video_path) else None
+            os.remove(cover_path) if os.path.exists(cover_path) else None
+            print(f"Video \"{video_path}\" has sent successfully.")
+        except yt_dlp.utils.DownloadError as e:
+            self.handle_error(f'{self.type}а не будет :(\nошибка: {e}')
+        except:
+            self.handle_error('ошибка при загрузке. бот занят или пусть админ смотрит логи')
+        
+    def process(self, matched):
+        self.preprocess(f'ща будет {self.type}')
+        self.extract_caption(matched)
+        self.download_video()
 
-
-if IS_SHORTS:
-    print("✅   YouTube Shorts feature is enabled.")
-
-    @bot.message_handler(func=lambda message: message.text.startswith(YT_FULL_URL)
-                         or message.text.startswith(YT_MOBILE_URL))
-    def download_and_send_yt(message: dict) -> None:
-        global SHORTS_CNT, ERR_CNT
-        chat_id = message.chat.id
-        text = message.text
-        message_id = message.message_id
-        thread_id = message.message_thread_id
-        youtube_url = YT_FULL_URL if YT_FULL_URL in text else YT_MOBILE_URL
-        if (sender := message.forward_from):
-            username = sender.username
-        else:
-            username = message.from_user.username
-        bot.delete_message(chat_id, message_id)
-        bot_message = bot.send_message(chat_id=chat_id,
-                                       message_thread_id=thread_id,
-                                       text='ща будет шортс...')
-        matched = re.match(fr'{youtube_url}\S* ?(.*)', text)
-        if not matched:
-            bot.edit_message_text(chat_id=chat_id,
-                                  message_id=bot_message.message_id,
-                                  text="ты кого наебать пытаешься?")
-        else:
-            user_caption = f'шортс от @{username}'
-            text_caption = matched.group(1)
-            caption = text_caption + '\n' + user_caption if text_caption else user_caption
-            try:
-                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
-                try:
-                    if IS_THUMBS:
-                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
-                                                                               'thumbnail.jpg')), 'rb')
-                except:
-                    print("ERROR OCCURED WHILE TAKING YT SHORTS THUMBNAIL")
-                bot.send_video(chat_id=chat_id,
-                               message_thread_id=thread_id,
-                               video=open(filename, 'rb'),
-                               caption=caption,
-                               cover=cover)
-                bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename) if os.path.exists(filename) else None
-                os.remove(cvrpth) if os.path.exists(cvrpth) else None
-                print(f"Shorts {filename} sent successfully.")
-                SHORTS_CNT += 1
-            except yt_dlp.utils.DownloadError as e:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text=f'шортса не будет :(\nошибка: {e}')
-            except:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text='ошибка при загрузке шортса. бот занят или пусть админ смотрит логи')
-else:
-    print("❌   YouTube Shorts feature is disabled.")
-
-
-if IS_VKCLIPS:
-    print("✅   VK CLips feature is enabled.")
-
-    @bot.message_handler(func=lambda message: message.text.startswith(VK_CLIPS_URL)
-                         or message.text.startswith(VK_VIDEO_CLIPS_URL))
-    def download_and_send_vk(message: dict) -> None:
-        global VKCLIPS_CNT, ERR_CNT
-        chat_id = message.chat.id
-        text = message.text
-        message_id = message.message_id
-        thread_id = message.message_thread_id
-        vk_url = VK_CLIPS_URL if VK_CLIPS_URL in text else VK_VIDEO_CLIPS_URL
-        if (sender := message.forward_from):
-            username = sender.username
-        else:
-            username = message.from_user.username
-        bot.delete_message(chat_id, message_id)
-        bot_message = bot.send_message(chat_id=chat_id,
-                                       message_thread_id=thread_id,
-                                       text='ща будет ВК КЛИП...')
-        matched = re.match(fr'{vk_url}\S* ?(.*)', text)
-        if not matched:
-            bot.edit_message_text(chat_id=chat_id,
-                                  message_id=bot_message.message_id,
-                                  text="ты кого наебать пытаешься?")
-        else:
-            user_caption = f'ВК КЛИП от @{username}'
-            text_caption = matched.group(1)
-            caption = text_caption + '\n' + user_caption if text_caption else user_caption
-            try:
-                filename, info = dwld_YTDLP_video(text, YDL_OPTS)
-                try:
-                    if IS_THUMBS:
-                        cover = open(cvrpth := dwld_YTThumb(info, os.path.join(os.getcwd(),
-                                                                               'thumbnail.jpg')), 'rb')
-                except:
-                        print("ERROR OCCURED WHILE TAKING VK CLIPS THUMBNAIL")
-                bot.send_video(chat_id=chat_id,
-                               message_thread_id=thread_id,
-                               video=open(filename, 'rb'),
-                               caption=caption,
-                               cover=cover)
-                bot.delete_message(chat_id, bot_message.message_id)
-                os.remove(filename) if os.path.exists(filename) else None
-                os.remove(cvrpth) if os.path.exists(cvrpth) else None
-                print(f"VK Clip {filename} sent successfully.")
-                VKCLIPS_CNT += 1
-            except yt_dlp.utils.DownloadError as e:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text=f'ВК КЛИПА не будет :(\nошибка: {e}')
-            except:
-                ERR_CNT += 1
-                bot.edit_message_text(chat_id=chat_id,
-                                      message_id=bot_message.message_id,
-                                      text='ошибка при загрузке ВК КЛИПА. бот занят или пусть админ смотрит логи')
-else:
-    print("❌   VK Clips feature is disabled.")
-
-
-if IS_THUMBS:
-    print("🖼️   Video thumbnails feature is enabled.")
-else:
-    print("❌   Video cover feature is disabled.")
-
-if not IS_REELS and not IS_SHORTS and not IS_VKCLIPS:
-    print("А нахуя я вообще запущен...")
-
+@bot.message_handler(func=lambda message: message.text.startswith('https://'))
+def handle_urls(message: dict) -> None:
+    if (matched := re.match(fr'(({'|'.join(YT_URLS)})\S*)\s*(.*)', message.text)):
+        type = IS_SHORTS and 'шортс'
+    elif (matched := re.match(fr'(({'|'.join(IG_URLS)})\S*)\s*(.*)', message.text)):
+        type = IS_REELS and 'рилс'
+    elif (matched := re.match(fr'(({'|'.join(VK_URLS)})\S*)\s*(.*)', message.text)):
+        type = IS_VKCLIPS and 'вк клип'
+    else:
+        bot.reply_to(message=message,
+                     text="Неподдерживаемая ссылка")
+    if type:
+        VideoHandler(bot, message, type).process(matched)
+    else:
+        bot.reply_to(message=message, text='Поддержка этого формата была отключена в настройках бота')
 
 @bot.message_handler(commands=['status'])
 def send_status(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
-    bottext = f"🤖 Бот работает. За время работы:\n" \
-              f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
-              f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
-              f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
-              f"❌ Количество ошибок: {ERR_CNT}"
+    bottext = '...'
+    # bottext = f"🤖 Бот работает. За время работы:\n" \
+    #           f"🤤 Количество скачанных рилсов: {REELS_CNT}\n" \
+    #           f"🩳 Количество скачанных шортсов: {SHORTS_CNT}\n" \
+    #           f"🤯 Количество скачанных ВК КЛИПОВ: {VKCLIPS_CNT}\n" \
+    #           f"❌ Количество ошибок: {ERR_CNT}"
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
@@ -241,7 +109,6 @@ def send_start(message: dict) -> None:
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
-
 
 # Start polling the bot
 print("Bot starting")
