@@ -7,7 +7,7 @@ VK_URLS = ['https://vk.com/clip-', 'https://vkvideo.ru/clip-']
 """ User-updatable parameters part """
 # YouTube Shorts & VK Clips download options
 YDL_OPTS = {
-    'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]',    # разрешение
+    'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',    # разрешение
     'outtmpl': '%(title)s.%(ext)s',  # Шаблон имени файла
     'merge_output_format': 'mp4',    # Формат выходного файла
     'noplaylist': True,              # Не загружать плейлисты
