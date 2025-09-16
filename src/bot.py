@@ -22,7 +22,6 @@ class VideoHandler:
         self.message = message
         self.chat_id = message.chat.id
         self.thread_id = message.message_thread_id
-        self.text = message.text
         self.username = message.forward_from.username if message.forward_from else message.from_user.username
         self.type = type
 
@@ -34,13 +33,15 @@ class VideoHandler:
 
     def extract_caption(self, matched):
         user_caption = f'{self.type} от @{self.username}'
-        text_caption = matched.groups()[-1]
+        text_caption = matched.group(3)
+        self.url = matched.group(1)
         self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
 
     def handle_error(self, error_text):
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
+        print(f'error in {self.url}')
 
     def download_and_send_video(self):
         match self.type:
