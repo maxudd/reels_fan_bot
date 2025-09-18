@@ -37,11 +37,16 @@ class VideoHandler:
         self.url = matched.group(1)
         self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
 
-    def handle_error(self, error_text):
+    def handle_error(self, db_cursor, error_text):
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
         print(f'error in {self.url}')
+        db_cursor.execute("""
+            UPDATE stats
+            SET err_cnt = err_cnt + 1
+            WHERE chat_id = ?;
+        """, (self.chat_id, ))
 
     def download_and_send_video(self):
         match self.type:
@@ -54,7 +59,7 @@ class VideoHandler:
         conn = sqlite3.connect('bot.db')
         cursor = conn.cursor()
         try:
-            video_path, info = dwld_YTDLP_video(self.text, YDL_OPTS)
+            video_path, info = dwld_YTDLP_video(self.url, YDL_OPTS)
             try:
                 if IS_THUMBS:
                     cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
@@ -77,18 +82,8 @@ class VideoHandler:
             """.format(field, field), (self.chat_id, ))
         except yt_dlp.utils.DownloadError as e:
             self.handle_error(f'{self.type}а не будет :(\nошибка: {e}')
-            cursor.execute("""
-                UPDATE stats
-                SET err_cnt = err_cnt + 1
-                WHERE chat_id = ?;
-            """, (self.chat_id, ))
         except:
-            self.handle_error('ошибка при загрузке. бот занят или пусть админ смотрит логи')
-            cursor.execute("""
-                UPDATE stats
-                SET err_cnt = err_cnt + 1
-                WHERE chat_id = ?;
-            """, (self.chat_id, ))
+            self.handle_error(cursor, 'ошибка при загрузке. бот занят или пусть админ смотрит логи')
         conn.commit()
         conn.close()
 
@@ -108,6 +103,7 @@ def handle_urls(message: dict) -> None:
     else:
         bot.reply_to(message=message,
                      text="Неподдерживаемая ссылка")
+        return
     if type:
         VideoHandler(bot, message, type).process(matched)
     else:
