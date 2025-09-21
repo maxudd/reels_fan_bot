@@ -144,30 +144,45 @@ def send_status(message: dict) -> None:
                      text=bottext)
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'info'])
 def send_start(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = "🤖 Привет! Основные команды бота:\n" \
-              "🤤 /status: узнать статистику по работе бота\n"
+              "📊 /status: узнать статистику по работе бота\n" \
+              "⚙️ /settings: узнать настройки работы бота\n"
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
-    with sqlite3.connect('bot.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS stats(
-                chat_id INT PRIMARY KEY,
-                reels_cnt INT DEFAULT 0,
-                shorts_cnt INT DEFAULT 0,
-                vk_cnt INT DEFAULT 0,
-                err_cnt INT DEFAULT 0
-            );
-        """)
-        cursor.execute("""
-            INSERT INTO stats(chat_id)
-            VALUES (?)    
-        """, (chat_id,))
+    if message.text.startswith('/start'):
+        with sqlite3.connect('bot.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS stats(
+                    chat_id INT PRIMARY KEY,
+                    reels_cnt INT DEFAULT 0,
+                    shorts_cnt INT DEFAULT 0,
+                    vk_cnt INT DEFAULT 0,
+                    err_cnt INT DEFAULT 0
+                );
+            """)
+            cursor.execute("""
+                INSERT INTO stats(chat_id)
+                VALUES (?)    
+            """, (chat_id,))
+
+@bot.message_handler(commands=['settings'])
+def send_settings(message):
+    chat_id = message.chat.id
+    thread_id = message.message_thread_id
+    bottext = "Текущие настройки:\n" \
+              f"{'✅' if IS_REELS else '❌'} Рилсы\n" \
+              f"{'✅' if IS_SHORTS else '❌'} Шортсы\n" \
+              f"{'✅' if IS_VKCLIPS else '❌'} ВК клипы\n" \
+              f"{'✅' if IS_THUMBS else '❌'} Обложки\n"
+    bot.send_message(chat_id=chat_id,
+                     message_thread_id=thread_id,
+                     text=bottext)
 
 # Start polling the bot
 logger.info('bot started')
