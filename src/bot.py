@@ -50,10 +50,11 @@ class VideoHandler:
         self.url = matched.group(1)
         self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
 
-    def handle_error(self, db_cursor, error_text):
+    def handle_error(self, db_cursor, error_text, error):
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
+        logger.error(f'{error}')
         logger.info(f'error in {self.url}')
         db_cursor.execute("""
             UPDATE stats
@@ -76,8 +77,8 @@ class VideoHandler:
             try:
                 if IS_THUMBS:
                     cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
-            except:
-                logger.error("ERROR OCCURED WHILE TAKING THUMBNAIL")
+            except Exception as e:
+                logger.error(f"ERROR OCCURED WHILE TAKING THUMBNAIL: {e}")
             self.bot.send_video(chat_id=self.chat_id,
                                 message_thread_id=self.thread_id,
                                 video=open(video_path, 'rb'),
@@ -94,9 +95,9 @@ class VideoHandler:
                 WHERE chat_id = ?;
             """.format(field, field), (self.chat_id, ))
         except yt_dlp.utils.DownloadError as e:
-            self.handle_error(f'{self.type}а не будет :(\nошибка: {e}')
-        except:
-            self.handle_error(cursor, 'ошибка при загрузке. бот занят или пусть админ смотрит логи')
+            self.handle_error(cursor, f'Не получилось скачать {self.type} :(', e)
+        except Exception as e:
+            self.handle_error(cursor, 'Какая-то ошибка при скачивании. Пусть админ смотрит логи', e)
         conn.commit()
         conn.close()
 
