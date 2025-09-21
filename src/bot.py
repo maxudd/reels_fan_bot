@@ -7,6 +7,19 @@ import yt_dlp
 from params import *
 from utils import *
 import sqlite3
+import logging
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    filename="bot.log",
+    encoding="utf-8",
+    filemode="a",
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+)
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -41,7 +54,7 @@ class VideoHandler:
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
-        print(f'error in {self.url}')
+        logger.info(f'error in {self.url}')
         db_cursor.execute("""
             UPDATE stats
             SET err_cnt = err_cnt + 1
@@ -64,7 +77,7 @@ class VideoHandler:
                 if IS_THUMBS:
                     cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
             except:
-                print("ERROR OCCURED WHILE TAKING THUMBNAIL")
+                logger.error("ERROR OCCURED WHILE TAKING THUMBNAIL")
             self.bot.send_video(chat_id=self.chat_id,
                                 message_thread_id=self.thread_id,
                                 video=open(video_path, 'rb'),
@@ -74,7 +87,7 @@ class VideoHandler:
                                     message_id=self.feedback_msg.message_id)
             os.remove(video_path) if os.path.exists(video_path) else None
             os.remove(cover_path) if os.path.exists(cover_path) else None
-            print(f"Video \"{video_path}\" has sent successfully.")
+            logger.info(f"Video \"{video_path}\" has sent successfully.")
             cursor.execute("""
                 UPDATE stats
                 SET {} = {} + 1
@@ -156,12 +169,12 @@ def send_start(message: dict) -> None:
         """, (chat_id,))
 
 # Start polling the bot
-print("Bot starting")
+logger.info('bot started')
 try:
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
 except apihelper.ApiException as e:
-    print(f"API Exception occurred: {e}")
+    logger.error(f"API Exception occurred: {e}")
     # print("Bot is already running on another device. Exiting.")
 except Exception as e:
-    print(f"An unexpected error occurred: {e}")
-print("Bot stopped.")
+    logger.error(f"An unexpected error occurred: {e}")
+logger.info("Bot stopped.")

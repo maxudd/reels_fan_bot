@@ -2,6 +2,9 @@ import yt_dlp
 import requests
 from PIL import Image
 from io import BytesIO
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def crop_to_vertical(image_bytes: bytes, save_path: str, aspect_ratio: tuple[int, int]=(9, 16)) -> str:
@@ -22,7 +25,7 @@ def crop_to_vertical(image_bytes: bytes, save_path: str, aspect_ratio: tuple[int
 
     cropped = image.crop((left, top, right, bottom))
     cropped.save(save_path)
-    print(f"Thumbnail cropped to {aspect_ratio=}")
+    logger.info(f"Thumbnail cropped to {aspect_ratio=}")
     return save_path
 
 
@@ -32,11 +35,11 @@ def dwld_YTDLP_video(url: str, ydl_opts: dict) -> tuple[str, dict] | None:
             # Получаем информацию о видео перед скачиванием
             info = ydl.extract_info(url, download=False)
             filename = ydl.prepare_filename(info)
-            print(f'Скачивание видео: {filename}')
+            logger.info(f'Скачивание видео: {filename}')
             ydl.download([url])
             return filename, info
     except Exception as e:
-        print(f"An error occurred while downloading video via YT_DLP: {e}")
+        logger.error(f"An error occurred while downloading video via YT_DLP: {e}")
         return None
 
 
@@ -49,13 +52,13 @@ def dwld_YTThumb(info: dict, save_path: str) -> None:
         response = requests.get(thumbnail_url)
 
         if response.status_code == 200:
-            print("Thumbnail downloaded successfully.")
+            logger.info("Thumbnail downloaded successfully.")
             crop_to_vertical(response.content, save_path)
             return save_path
         else:
-            print("Failed to retrieve thumbnail.")
+            logger.error("Failed to retrieve thumbnail.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
