@@ -26,6 +26,12 @@ load_dotenv()
 values = dotenv_values()
 bot = TeleBot(values['BOT_TOKEN'])
 
+names = {
+    'рилс': 'reels',
+    'шортс': 'shorts',
+    'вк клип': 'vk',
+}
+
 target_inst_dir = 'reels'
 os.makedirs(target_inst_dir, exist_ok=True)
 
@@ -63,13 +69,7 @@ class VideoHandler:
         """, (self.chat_id, ))
 
     def download_and_send_video(self) -> None:
-        match self.type:
-            case 'рилс':
-                field = 'reels_cnt'
-            case 'шортс':
-                field = 'shorts_cnt'
-            case 'вк клип':
-                field = 'vk_cnt'
+        field = names[self.type] + '_cnt'
         conn = connect('bot.db')
         cursor = conn.cursor()
         try:
