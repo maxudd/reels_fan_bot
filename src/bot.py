@@ -6,7 +6,7 @@ from telebot import TeleBot, apihelper
 import yt_dlp
 from params import *
 from utils import *
-import sqlite3
+from sqlite3 import connect, Cursor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ target_inst_dir = 'reels'
 os.makedirs(target_inst_dir, exist_ok=True)
 
 class VideoHandler:
-    def __init__(self, bot, message, type):
+    def __init__(self, bot: TeleBot, message: dict, type: str) -> None:
         self.bot = bot
         self.message = message
         self.chat_id = message.chat.id
@@ -38,19 +38,19 @@ class VideoHandler:
         self.username = message.forward_from.username if message.forward_from else message.from_user.username
         self.type = type
 
-    def preprocess(self, wait_text):
+    def preprocess(self, wait_text: str) -> None:
         self.bot.delete_message(self.chat_id, self.message.message_id)
         self.feedback_msg = self.bot.send_message(chat_id=self.chat_id,
                                                   message_thread_id=self.thread_id,
                                                   text=wait_text)
 
-    def extract_caption(self, matched):
+    def extract_caption(self, matched: re.Match[str]) -> None:
         user_caption = f'{self.type} от @{self.username}'
         text_caption = matched.group(3)
         self.url = matched.group(1)
         self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
 
-    def handle_error(self, db_cursor, error_text, error):
+    def handle_error(self, db_cursor: Cursor, error_text: str, error: Exception) -> None:
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
@@ -62,7 +62,7 @@ class VideoHandler:
             WHERE chat_id = ?;
         """, (self.chat_id, ))
 
-    def download_and_send_video(self):
+    def download_and_send_video(self) -> None:
         match self.type:
             case 'рилс':
                 field = 'reels_cnt'
@@ -70,7 +70,7 @@ class VideoHandler:
                 field = 'shorts_cnt'
             case 'вк клип':
                 field = 'vk_cnt'
-        conn = sqlite3.connect('bot.db')
+        conn = connect('bot.db')
         cursor = conn.cursor()
         try:
             video_path, info = dwld_YTDLP_video(self.url, YDL_OPTS)
@@ -101,7 +101,7 @@ class VideoHandler:
         conn.commit()
         conn.close()
 
-    def process(self, matched):
+    def process(self, matched: re.Match[str]) -> None:
         self.preprocess(f'ща будет {self.type}')
         self.extract_caption(matched)
         self.download_and_send_video()
@@ -127,7 +127,7 @@ def handle_urls(message: dict) -> None:
 def send_status(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
-    with sqlite3.connect('bot.db') as conn:
+    with connect('bot.db') as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT reels_cnt, shorts_cnt, vk_cnt, err_cnt FROM stats
@@ -155,7 +155,7 @@ def send_start(message: dict) -> None:
                      message_thread_id=thread_id,
                      text=bottext)
     if message.text.startswith('/start'):
-        with sqlite3.connect('bot.db') as conn:
+        with connect('bot.db') as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS stats(
@@ -172,7 +172,7 @@ def send_start(message: dict) -> None:
             """, (chat_id,))
 
 @bot.message_handler(commands=['settings'])
-def send_settings(message):
+def send_settings(message: dict) -> None:
     chat_id = message.chat.id
     thread_id = message.message_thread_id
     bottext = "Текущие настройки:\n" \
