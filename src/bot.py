@@ -32,9 +32,6 @@ names = {
     'вк клип': 'vk',
 }
 
-target_inst_dir = 'reels'
-os.makedirs(target_inst_dir, exist_ok=True)
-
 class VideoHandler:
     def __init__(self, bot: TeleBot, message: dict, type: str) -> None:
         self.bot = bot
@@ -60,7 +57,7 @@ class VideoHandler:
         self.bot.edit_message_text(chat_id=self.chat_id,
                                    message_id=self.feedback_msg.message_id,
                                    text=error_text)
-        logger.error(f'{error}')
+        logger.exception('')
         logger.info(f'error in {self.url}')
         db_cursor.execute("""
             UPDATE stats
@@ -78,7 +75,7 @@ class VideoHandler:
                 if IS_THUMBS:
                     cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
             except Exception as e:
-                logger.error(f"ERROR OCCURED WHILE TAKING THUMBNAIL: {e}")
+                logger.exception("ERROR OCCURED WHILE TAKING THUMBNAIL")
             self.bot.send_video(chat_id=self.chat_id,
                                 message_thread_id=self.thread_id,
                                 video=open(video_path, 'rb'),
