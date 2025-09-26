@@ -1,3 +1,4 @@
+from re import match, Match
 import yt_dlp
 import requests
 from PIL import Image
@@ -7,7 +8,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def crop_to_vertical(image_bytes: bytes, save_path: str, aspect_ratio: tuple[int, int]=(9, 16)) -> str:
+def match_urls(urls: list[str], text: str) -> Match:
+    return match(fr'(({'|'.join(urls)})\S*)\s*(.*)', text)
+
+
+def crop_to_vertical(
+        image_bytes: bytes,
+        save_path: str,
+        aspect_ratio: tuple[int, int] = (9, 16)) -> str:
     image = Image.open(BytesIO(image_bytes))
     width, height = image.size
     target_ratio = aspect_ratio[0] / aspect_ratio[1]

@@ -1,5 +1,5 @@
 import threading
-import re
+from re import Match
 import os
 from dotenv import load_dotenv, dotenv_values
 from telebot import TeleBot, apihelper
@@ -32,31 +32,42 @@ names = {
     'вк клип': 'vk',
 }
 
+
 class VideoHandler:
     def __init__(self, bot: TeleBot, message: dict, type: str) -> None:
         self.bot = bot
         self.message = message
         self.chat_id = message.chat.id
         self.thread_id = message.message_thread_id
-        self.username = message.forward_from.username if message.forward_from else message.from_user.username
+        self.username = (
+            message.forward_from.username
+            if message.forward_from
+            else message.from_user.username
+        )
         self.type = type
 
     def preprocess(self, wait_text: str) -> None:
         self.bot.delete_message(self.chat_id, self.message.message_id)
-        self.feedback_msg = self.bot.send_message(chat_id=self.chat_id,
-                                                  message_thread_id=self.thread_id,
-                                                  text=wait_text)
+        self.feedback_msg = self.bot.send_message(
+            chat_id=self.chat_id,
+            message_thread_id=self.thread_id,
+            text=wait_text)
 
-    def extract_caption(self, matched: re.Match[str]) -> None:
+    def extract_caption(self, matched: Match[str]) -> None:
         user_caption = f'{self.type} от @{self.username}'
         text_caption = matched.group(3)
         self.url = matched.group(1)
-        self.caption = text_caption + '\n' + user_caption if text_caption else user_caption
+        self.caption = (
+            text_caption + '\n' + user_caption
+            if text_caption
+            else user_caption
+        )
 
-    def handle_error(self, db_cursor: Cursor, error_text: str, error: Exception) -> None:
-        self.bot.edit_message_text(chat_id=self.chat_id,
-                                   message_id=self.feedback_msg.message_id,
-                                   text=error_text)
+    def handle_error(self, db_cursor: Cursor, error_text: str) -> None:
+        self.bot.edit_message_text(
+            chat_id=self.chat_id,
+            message_id=self.feedback_msg.message_id,
+            text=error_text)
         logger.exception('')
         logger.info(f'error in {self.url}')
         db_cursor.execute("""
@@ -73,7 +84,9 @@ class VideoHandler:
             video_path, info = dwld_YTDLP_video(self.url, YDL_OPTS)
             try:
                 if IS_THUMBS:
-                    cover_path = dwld_YTThumb(info, os.path.join(os.getcwd(), 'thumbnail.jpg'))
+                    cover_path = dwld_YTThumb(
+                        info,
+                        os.path.join(os.getcwd(), 'thumbnail.jpg'))
             except Exception as e:
                 logger.exception("ERROR OCCURED WHILE TAKING THUMBNAIL")
             self.bot.send_video(chat_id=self.chat_id,
@@ -92,24 +105,29 @@ class VideoHandler:
                 WHERE chat_id = ?;
             """.format(field, field), (self.chat_id, ))
         except yt_dlp.utils.DownloadError as e:
-            self.handle_error(cursor, f'Не получилось скачать {self.type} :(', e)
+            self.handle_error(
+                cursor,
+                f'Не получилось скачать {self.type} :(')
         except Exception as e:
-            self.handle_error(cursor, 'Какая-то ошибка при скачивании. Пусть админ смотрит логи', e)
+            self.handle_error(
+                cursor,
+                'Какая-то ошибка при скачивании. Пусть админ смотрит логи')
         conn.commit()
         conn.close()
 
-    def process(self, matched: re.Match[str]) -> None:
+    def process(self, matched: Match[str]) -> None:
         self.preprocess(f'ща будет {self.type}')
         self.extract_caption(matched)
         self.download_and_send_video()
 
-@bot.message_handler(func=lambda message: message.text.startswith('https://'))
+
+@bot.message_handler(func=lambda msg: msg.text.startswith('https://'))
 def handle_urls(message: dict) -> None:
-    if (matched := re.match(fr'(({'|'.join(YT_URLS)})\S*)\s*(.*)', message.text)):
+    if (matched := match_urls(YT_URLS, message.text)):
         type = IS_SHORTS and 'шортс'
-    elif (matched := re.match(fr'(({'|'.join(IG_URLS)})\S*)\s*(.*)', message.text)):
+    elif (matched := match_urls(IG_URLS, message.text)):
         type = IS_REELS and 'рилс'
-    elif (matched := re.match(fr'(({'|'.join(VK_URLS)})\S*)\s*(.*)', message.text)):
+    elif (matched := match_urls(VK_URLS, message.text)):
         type = IS_VKCLIPS and 'вк клип'
     else:
         bot.reply_to(message=message,
@@ -118,7 +136,10 @@ def handle_urls(message: dict) -> None:
     if type:
         VideoHandler(bot, message, type).process(matched)
     else:
-        bot.reply_to(message=message, text='Поддержка этого формата была отключена в настройках бота')
+        bot.reply_to(
+            message=message,
+            text='Поддержка этого формата была отключена в настройках бота')
+
 
 @bot.message_handler(commands=['status'])
 def send_status(message: dict) -> None:
@@ -165,8 +186,9 @@ def send_start(message: dict) -> None:
             """)
             cursor.execute("""
                 INSERT INTO stats(chat_id)
-                VALUES (?)    
+                VALUES (?)
             """, (chat_id,))
+
 
 @bot.message_handler(commands=['settings'])
 def send_settings(message: dict) -> None:
@@ -180,6 +202,7 @@ def send_settings(message: dict) -> None:
     bot.send_message(chat_id=chat_id,
                      message_thread_id=thread_id,
                      text=bottext)
+
 
 # Start polling the bot
 logger.info('bot started')
