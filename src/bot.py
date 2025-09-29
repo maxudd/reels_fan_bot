@@ -193,8 +193,8 @@ def send_settings(message: dict) -> None:
 
 
 # Start polling the bot
-print_log("Bot started")
 try:
+    print_log("Bot started")
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
 except apihelper.ApiException as e:
     print_log(f"API Exception occurred: {e}", "error")
