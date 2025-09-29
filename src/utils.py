@@ -32,7 +32,7 @@ def print_log(msg: str, level: str = "info") -> None:
 
 
 def match_urls(urls: list[str], text: str) -> Match:
-    return match(fr'(({'|'.join(urls)})\S*)\s*(.*)', text)
+    return match(fr"(({'|'.join(urls)})\S*)\s*(.*)", text)
 
 
 def crop_to_vertical(
