@@ -5,3 +5,6 @@ tmp/
 *.pyc
 downloads/
 thumbnail*
+
+*.log
+bot.db

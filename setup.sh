@@ -10,7 +10,10 @@ INST_LOGIN='$inst_login'
 INST_PASSWORD='$inst_password'
 EOF
 
-python3 -m venv bot-env
-source bot-env/bin/activate
+read -rp "Create Python venv? [Y/n]: " create_venv
 
-pip install -r requirements.txt
+if [[ "$create_venv" =~ ^[Yy]$ ]]; then
+    python3 -m venv bot-env
+    source bot-env/bin/activate
+    pip install -r requirements.txt
+fi
