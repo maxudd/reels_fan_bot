@@ -1,7 +1,7 @@
 """ This file contains parameters and configurations for the bot """
 # URLs for Instagram Reels, YouTube Shorts and VK Clips
 IG_URLS = ['https://www.instagram.com/reel/']
-YT_URLS = ['https://youtube.com/shorts/']
+YT_URLS = ['https://youtube.com/shorts/', 'https://www.youtube.com/shorts/']
 VK_URLS = ['https://vk.com/clip-', 'https://vkvideo.ru/clip-']
 
 """ User-updatable parameters part """
