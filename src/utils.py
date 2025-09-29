@@ -5,7 +5,30 @@ from PIL import Image
 from io import BytesIO
 import logging
 
+
+# Настройка логгера
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    filename="bot.log",
+    encoding="utf-8",
+    filemode="a",
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+)
+
+
+def print_log(msg: str, level: str = "info") -> None:
+    print(msg)
+    if level == "info":
+        logger.info(msg)
+    elif level == "error":
+        logger.error(msg)
+    elif level == "exception":
+        logger.exception(msg)
+    else:
+        logger.debug(msg)
 
 
 def match_urls(urls: list[str], text: str) -> Match:
@@ -33,7 +56,7 @@ def crop_to_vertical(
 
     cropped = image.crop((left, top, right, bottom))
     cropped.save(save_path)
-    logger.info(f"Thumbnail cropped to {aspect_ratio=}")
+    print_log(f"Thumbnail cropped to {aspect_ratio=}")
     return save_path
 
 
@@ -42,7 +65,7 @@ def dwld_YTDLP_video(url: str, ydl_opts: dict) -> tuple[str, dict] | None:
         # Получаем информацию о видео перед скачиванием
         info = ydl.extract_info(url, download=False)
         filename = ydl.prepare_filename(info)
-        logger.info(f'Скачивание видео: {filename}')
+        print_log(f"Скачивание видео: {filename}")
         ydl.download([url])
         return filename, info
 
@@ -55,11 +78,11 @@ def dwld_YTThumb(info: dict, save_path: str) -> None:
     response = requests.get(thumbnail_url)
 
     if response.status_code == 200:
-        logger.info("Thumbnail downloaded successfully.")
+        print_log("Thumbnail downloaded successfully.")
         crop_to_vertical(response.content, save_path)
         return save_path
     else:
-        logger.error("Failed to retrieve thumbnail.")
+        print_log("Failed to retrieve thumbnail.", "error")
 
 
 if __name__ == "__main__":
